@@ -20,8 +20,10 @@ import {
   Smartphone
 } from 'lucide-react'
 import { useRecycleStore } from '../../../store/useRecycleStore'
+import { useAuthStore } from '../../../store/useAuthStore'
 
 export const KioskOperatorTerminal: React.FC = () => {
+  const { currentUser } = useAuthStore()
   const {
     operatorInputToken,
     setOperatorInputToken,
@@ -40,7 +42,11 @@ export const KioskOperatorTerminal: React.FC = () => {
     savedPasses
   } = useRecycleStore()
 
-  const [operatorName, setOperatorName] = useState('Kavita Sharma (Lead Lab Tech)')
+  const defaultOperatorName = currentUser
+    ? `${currentUser.name} (${currentUser.role === 'kiosk_operator' ? 'Kiosk Operator' : 'Campus Admin'})`
+    : 'Arun Verma (Lead Lab Tech)'
+
+  const [operatorName, setOperatorName] = useState(defaultOperatorName)
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
   const [isAccepting, setIsAccepting] = useState(false)
 

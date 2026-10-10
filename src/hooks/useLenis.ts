@@ -87,5 +87,18 @@ export function useLenis() {
     }
   }, [setScrollProgress, setActiveChapter, registerLenisScrollTo])
 
+  // Automatically pause Lenis when modals are open so modal vertical scroll is 100% native
+  const { activeModal } = useWorldStore()
+  useEffect(() => {
+    const lenis = lenisRef.current
+    if (!lenis) return
+    if (activeModal) {
+      lenis.stop()
+    } else {
+      lenis.start()
+    }
+  }, [activeModal])
+
   return lenisRef
 }
+

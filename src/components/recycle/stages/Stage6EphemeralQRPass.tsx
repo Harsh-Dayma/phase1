@@ -14,11 +14,14 @@ import {
   Flame,
   AlertTriangle,
   RotateCcw,
-  MonitorCheck
+  MonitorCheck,
+  FolderArchive
 } from 'lucide-react'
 import { useRecycleStore } from '../../../store/useRecycleStore'
+import { useAuthStore } from '../../../store/useAuthStore'
 
 export const Stage6EphemeralQRPass: React.FC = () => {
+  const { currentUser } = useAuthStore()
   const {
     activePass,
     setActiveTab,
@@ -236,18 +239,31 @@ export const Stage6EphemeralQRPass: React.FC = () => {
             <span className="hidden sm:inline">Print / Save Pass</span>
           </button>
 
-          {/* SIMULATE HANDOVER BUTTON -> OPENS KIOSK TERMINAL DIRECTLY WITH THIS TOKEN! */}
-          <button
-            onClick={() => {
-              lookupPass(activePass.passId)
-              setActiveTab('kiosk_terminal')
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald text-background font-bold text-xs uppercase tracking-wider shadow-emerald-glow hover:brightness-105 transition-all"
-          >
-            <MonitorCheck className="w-3.5 h-3.5" />
-            <span>Launch Kiosk Terminal Scan</span>
-            <ArrowRight className="w-3 h-3" />
-          </button>
+          {/* FOR STUDENTS: VIEW IN MY TECH VAULT. FOR ADMIN/OPERATOR: SIMULATE TERMINAL */}
+          {currentUser?.role === 'college_admin' || currentUser?.role === 'kiosk_operator' ? (
+            <button
+              onClick={() => {
+                lookupPass(activePass.passId)
+                setActiveTab('kiosk_terminal')
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald text-background font-bold text-xs uppercase tracking-wider shadow-emerald-glow hover:brightness-105 transition-all cursor-pointer"
+            >
+              <MonitorCheck className="w-3.5 h-3.5" />
+              <span>Launch Kiosk Terminal Scan</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setActiveTab('tech_vault')
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald text-background font-bold text-xs uppercase tracking-wider shadow-emerald-glow hover:brightness-105 transition-all cursor-pointer"
+            >
+              <FolderArchive className="w-3.5 h-3.5" />
+              <span>View in My Tech Vault</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          )}
         </div>
       </div>
 

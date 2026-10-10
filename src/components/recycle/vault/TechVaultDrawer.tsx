@@ -13,15 +13,37 @@ import {
   ShieldCheck,
   ChevronRight,
   ExternalLink,
-  Printer
+  Printer,
+  GraduationCap,
+  Shield,
+  ShieldAlert
 } from 'lucide-react'
 import { useRecycleStore, type EphemeralPass } from '../../../store/useRecycleStore'
+import { useAuthStore } from '../../../store/useAuthStore'
 
 export const TechVaultDrawer: React.FC = () => {
   const { savedPasses, lookupPass, setActiveTab } = useRecycleStore()
+  const { currentUser } = useAuthStore()
   const [selectedReceiptPass, setSelectedReceiptPass] = useState<EphemeralPass | null>(null)
 
-  const acceptedPasses = savedPasses.filter((p) => p.status === 'accepted')
+  const isCollegeAdmin = currentUser?.role === 'college_admin'
+  const isKioskOperator = currentUser?.role === 'kiosk_operator'
+
+  // Filter submissions by role:
+  // - Students can ONLY see their own submissions (privacy isolation).
+  // - College Admins see all institutional submissions with full submitter telemetry.
+  // - Kiosk Operators are restricted from vault view.
+  const visiblePasses = isCollegeAdmin
+    ? savedPasses
+    : savedPasses.filter((p) => {
+        if (!currentUser) return false
+        if (p.userId && p.userId === currentUser.id) return true
+        if (p.studentRollNo && currentUser.studentRollNo && p.studentRollNo === currentUser.studentRollNo) return true
+        if (p.studentName && currentUser.name && p.studentName === currentUser.name) return true
+        return false
+      })
+
+  const acceptedPasses = visiblePasses.filter((p) => p.status === 'accepted')
   const totalKg = acceptedPasses.reduce(
     (sum, p) => sum + (p.receipt?.kgAddedToCampus || p.declaredMassGrams / 1000),
     0
@@ -35,6 +57,29 @@ export const TechVaultDrawer: React.FC = () => {
     0
   )
 
+  // Kiosk operators are not authorized to view the Tech Vault
+  if (isKioskOperator) {
+    return (
+      <div className="p-8 text-center space-y-4 max-w-md mx-auto my-8 rounded-2xl liquid-glass border border-amber/30">
+        <div className="w-12 h-12 rounded-2xl bg-amber/20 border border-amber/40 flex items-center justify-center text-amber mx-auto shadow-amber-glow">
+          <ShieldAlert className="w-6 h-6" />
+        </div>
+        <h3 className="text-lg font-bold text-text-primary">
+          Access Restricted: Kiosk Operator Role
+        </h3>
+        <p className="text-xs text-text-secondary leading-relaxed">
+          Kiosk operators are authorized exclusively for the hardware verification terminal. Access to student personal submission histories and administrative ledgers is restricted.
+        </p>
+        <button
+          onClick={() => setActiveTab('kiosk_terminal')}
+          className="px-5 py-2.5 rounded-xl bg-cyan hover:bg-cyan-bright text-black font-bold text-xs shadow-cyan-glow transition-all cursor-pointer"
+        >
+          Return to Operator Terminal
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* VAULT SUMMARY HERO */}
@@ -46,15 +91,15 @@ export const TechVaultDrawer: React.FC = () => {
             </div>
             <div>
               <span className="text-[10px] font-mono uppercase tracking-widest text-emerald font-bold block">
-                STUDENT TELEMETRY ARCHIVE
+                {isCollegeAdmin ? 'INSTITUTIONAL AUDIT LEDGER • CAMPUS ADMINISTRATION' : 'STUDENT TELEMETRY ARCHIVE • MY SUBMISSIONS'}
               </span>
               <h2 className="text-xl sm:text-2xl font-extrabold text-text-primary tracking-tight">
-                Tech Vault & Verified Certificates
+                {isCollegeAdmin ? 'Campus Tech Vault & Institutional Audit Ledger' : 'My Tech Vault & Verified Certificates'}
               </h2>
             </div>
           </div>
           <span className="text-xs font-mono px-3 py-1 rounded-full bg-white/5 border border-white/10 text-text-secondary">
-            {savedPasses.length} Submissions Logged
+            {visiblePasses.length} Submissions Logged
           </span>
         </div>
 
@@ -62,7 +107,7 @@ export const TechVaultDrawer: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-center">
             <span className="text-[10px] font-mono text-text-muted uppercase block">
-              Total Hardware Diverted
+              {isCollegeAdmin ? 'Campus Diverted' : 'My Diverted Hardware'}
             </span>
             <div className="text-2xl font-black font-mono text-emerald mt-0.5">
               {totalKg.toFixed(2)} <span className="text-xs font-normal">KG</span>
@@ -72,7 +117,7 @@ export const TechVaultDrawer: React.FC = () => {
 
           <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-center">
             <span className="text-[10px] font-mono text-text-muted uppercase block">
-              Eco Credits Earned
+              {isCollegeAdmin ? 'Institutional Eco Credits' : 'My Eco Credits'}
             </span>
             <div className="text-2xl font-black font-mono text-cyan mt-0.5">
               +{totalEcoCredits} <span className="text-xs font-normal">EC</span>
@@ -82,7 +127,7 @@ export const TechVaultDrawer: React.FC = () => {
 
           <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-center">
             <span className="text-[10px] font-mono text-text-muted uppercase block">
-              Derby XP Surge
+              {isCollegeAdmin ? 'Campus Derby Contribution' : 'My Derby XP Surge'}
             </span>
             <div className="text-2xl font-black font-mono text-lavender mt-0.5">
               +{totalXp} <span className="text-xs font-normal">XP</span>
@@ -95,89 +140,130 @@ export const TechVaultDrawer: React.FC = () => {
       {/* SUBMISSION HISTORY LIST */}
       <div className="space-y-3">
         <span className="text-xs font-mono uppercase tracking-wider text-text-muted block">
-          Audited Handover Passes & Active Reservations
+          {isCollegeAdmin ? 'Audited Campus Submissions & Submitter Profiles' : 'My Audited Passes & Active Reservations'}
         </span>
 
-        <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1 no-scrollbar">
-          {savedPasses.map((p) => {
+        {/* Natural vertical flow inside parent modal scroll container (removes nested wheel trap) */}
+        <div className="space-y-2.5">
+          {visiblePasses.length === 0 && (
+            <div className="p-8 rounded-2xl liquid-glass-subtle border border-white/10 text-center space-y-2">
+              <FolderArchive className="w-8 h-8 text-text-muted mx-auto opacity-40" />
+              <h4 className="text-sm font-bold text-text-primary">No Submissions Found</h4>
+              <p className="text-xs text-text-secondary max-w-sm mx-auto">
+                {isCollegeAdmin
+                  ? 'No student hardware submissions logged for this campus ledger.'
+                  : `No drop-offs recorded for ${currentUser?.name || 'this account'}. Use Student Drop-Off to submit hardware.`}
+              </p>
+            </div>
+          )}
+
+          {visiblePasses.map((p) => {
             const isAccepted = p.status === 'accepted'
             const isRejected = p.status === 'rejected'
 
             return (
               <div
                 key={p.passId}
-                className="p-4 rounded-2xl liquid-glass-subtle border border-white/[0.08] hover:border-white/20 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group"
+                className="p-4 rounded-2xl liquid-glass-subtle border border-white/[0.08] hover:border-white/20 transition-all flex flex-col gap-3 group"
               >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                      isAccepted
-                        ? 'bg-emerald/20 text-emerald border border-emerald/40'
-                        : isRejected
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/40'
-                        : 'bg-cyan/20 text-cyan border border-cyan/40'
-                    }`}
-                  >
-                    {isAccepted ? (
-                      <CheckCircle2 className="w-5 h-5" />
-                    ) : isRejected ? (
-                      <FileText className="w-5 h-5" />
-                    ) : (
-                      <Clock className="w-5 h-5" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                        isAccepted
+                          ? 'bg-emerald/20 text-emerald border border-emerald/40'
+                          : isRejected
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/40'
+                          : 'bg-cyan/20 text-cyan border border-cyan/40'
+                      }`}
+                    >
+                      {isAccepted ? (
+                        <CheckCircle2 className="w-5 h-5" />
+                      ) : isRejected ? (
+                        <FileText className="w-5 h-5" />
+                      ) : (
+                        <Clock className="w-5 h-5" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-text-primary">
+                          {p.passId}
+                        </span>
+                        <span
+                          className={`text-[9px] font-mono uppercase px-2 py-0.2 rounded-full font-bold ${
+                            isAccepted
+                              ? 'bg-emerald/20 text-emerald'
+                              : isRejected
+                              ? 'bg-red-500/20 text-red-400'
+                              : 'bg-amber/20 text-amber'
+                          }`}
+                        >
+                          {p.status}
+                        </span>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-text-primary truncate mt-0.5">
+                        {p.productName} ({p.variant})
+                      </h4>
+
+                      <div className="flex items-center gap-2 text-[11px] text-text-secondary mt-0.5 font-mono">
+                        <span>{p.declaredMassGrams}g</span>
+                        <span>•</span>
+                        <span className="truncate">{p.kioskName}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    {isAccepted && p.receipt && (
+                      <button
+                        onClick={() => setSelectedReceiptPass(p)}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold text-emerald hover:bg-emerald/10 border border-emerald/30 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <Award className="w-3.5 h-3.5" />
+                        <span>View Certificate</span>
+                      </button>
+                    )}
+
+                    {/* KIOSK OPERATOR TERMINAL INSPECTION: RESTRICTED STRICTLY TO COLLEGE ADMIN */}
+                    {isCollegeAdmin && (
+                      <button
+                        onClick={() => {
+                          lookupPass(p.passId)
+                          setActiveTab('kiosk_terminal')
+                        }}
+                        className="px-3 py-1.5 rounded-full text-xs font-mono text-text-muted hover:text-cyan border border-white/10 hover:bg-white/5 transition-colors cursor-pointer"
+                      >
+                        Inspect in Terminal
+                      </button>
                     )}
                   </div>
+                </div>
 
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-text-primary">
-                        {p.passId}
+                {/* COLLEGE ADMIN AUDIT DETAILS: SUBMITTER PROFILE & REPOSITORY METADATA */}
+                {isCollegeAdmin && (
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/[0.06] text-[11px] font-mono">
+                    <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan/15 text-cyan border border-cyan/30">
+                      <GraduationCap className="w-3.5 h-3.5" />
+                      <span className="font-bold">{p.studentName || 'Student Submitter'}</span>
+                    </span>
+                    {p.studentRollNo && (
+                      <span className="text-text-muted">
+                        Roll: <strong className="text-text-primary">{p.studentRollNo}</strong>
                       </span>
-                      <span
-                        className={`text-[9px] font-mono uppercase px-2 py-0.2 rounded-full font-bold ${
-                          isAccepted
-                            ? 'bg-emerald/20 text-emerald'
-                            : isRejected
-                            ? 'bg-red-500/20 text-red-400'
-                            : 'bg-amber/20 text-amber'
-                        }`}
-                      >
-                        {p.status}
+                    )}
+                    {p.department && (
+                      <span className="text-text-secondary hidden sm:inline">
+                        • {p.department}
                       </span>
-                    </div>
-
-                    <h4 className="text-sm font-bold text-text-primary truncate mt-0.5">
-                      {p.productName} ({p.variant})
-                    </h4>
-
-                    <div className="flex items-center gap-2 text-[11px] text-text-secondary mt-0.5 font-mono">
-                      <span>{p.declaredMassGrams}g</span>
-                      <span>•</span>
-                      <span className="truncate">{p.kioskName}</span>
-                    </div>
+                    )}
+                    <span className="text-text-muted ml-auto text-[10px]">
+                      {p.campusName}
+                    </span>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                  {isAccepted && p.receipt && (
-                    <button
-                      onClick={() => setSelectedReceiptPass(p)}
-                      className="px-3 py-1.5 rounded-full text-xs font-semibold text-emerald hover:bg-emerald/10 border border-emerald/30 transition-colors flex items-center gap-1"
-                    >
-                      <Award className="w-3.5 h-3.5" />
-                      <span>View Certificate</span>
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => {
-                      lookupPass(p.passId)
-                      setActiveTab('kiosk_terminal')
-                    }}
-                    className="px-3 py-1.5 rounded-full text-xs font-mono text-text-muted hover:text-cyan border border-white/10 hover:bg-white/5 transition-colors"
-                  >
-                    Inspect in Terminal
-                  </button>
-                </div>
+                )}
               </div>
             )
           })}

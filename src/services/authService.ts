@@ -124,7 +124,7 @@ export class AuthService {
    */
   static hasPermission(
     session: AuthSession | null,
-    permission: 'kiosk_operator_terminal' | 'student_dropoff' | 'admin_tech_vault' | 'personal_vault'
+    permission: 'kiosk_operator_terminal' | 'student_dropoff' | 'admin_tech_vault' | 'student_personal_vault' | 'personal_vault'
   ): boolean {
     if (!session) return false
 
@@ -135,14 +135,28 @@ export class AuthService {
     const role = verified.user.role
 
     switch (permission) {
-      case 'kiosk_operator_terminal':
-      case 'admin_tech_vault':
-        return role === 'college_admin'
       case 'student_dropoff':
+        // Visible & allowed ONLY for Students.
+        // College Admins & Kiosk Operators must NOT see or access Student Drop-off!
+        return role === 'student'
+
+      case 'student_personal_vault':
       case 'personal_vault':
-        return role === 'student' || role === 'college_admin'
+        // Visible & allowed for Student viewing their own submissions.
+        return role === 'student'
+
+      case 'admin_tech_vault':
+        // Visible & allowed ONLY for College Admins (audit & institution-wide records).
+        return role === 'college_admin'
+
+      case 'kiosk_operator_terminal':
+        // Visible & allowed for Kiosk Operators and College Admins.
+        // Students MUST NOT access!
+        return role === 'kiosk_operator' || role === 'college_admin'
+
       default:
         return false
     }
   }
 }
+

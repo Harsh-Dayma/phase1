@@ -8,7 +8,10 @@ import {
   LogIn,
   LogOut,
   Shield,
-  GraduationCap
+  GraduationCap,
+  Scan,
+  FolderArchive,
+  Smartphone
 } from 'lucide-react'
 import { useWorldStore } from '../../store/useWorldStore'
 import { useAuthStore } from '../../store/useAuthStore'
@@ -31,6 +34,10 @@ export const TopNav: React.FC = () => {
     logout,
     openLoginModal
   } = useAuthStore()
+
+  const isStudent = currentUser?.role === 'student'
+  const isCollegeAdmin = currentUser?.role === 'college_admin'
+  const isKioskOperator = currentUser?.role === 'kiosk_operator'
 
   const navChapters = [
     { id: 0, label: 'Story' },
@@ -88,30 +95,60 @@ export const TopNav: React.FC = () => {
 
           <div className="w-[1px] h-3.5 bg-white/10 mx-1" />
 
-          <button
-            onClick={() => {
-              if (!isAuthenticated) {
-                openLoginModal('Please authenticate to access the Student Drop-Off portal.')
-              } else {
-                openModal('recycle')
-              }
-            }}
-            className="px-3 py-1 rounded-full text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all"
-          >
-            Recycle
-          </button>
-          <button
-            onClick={() => {
-              if (!isAuthenticated) {
-                openLoginModal('Please authenticate to access your Tech Vault.')
-              } else {
-                openModal('vault')
-              }
-            }}
-            className="px-3 py-1 rounded-full text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all"
-          >
-            Vault
-          </button>
+          {/* ROLE-AWARE MODULE NAVIGATION LINKS */}
+          {!isAuthenticated ? (
+            <>
+              <button
+                onClick={() => openLoginModal('Please authenticate to access the Student Drop-Off portal.')}
+                className="px-3 py-1 rounded-full text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all cursor-pointer"
+              >
+                Drop-Off
+              </button>
+              <button
+                onClick={() => openLoginModal('Please authenticate to access the Tech Vault.')}
+                className="px-3 py-1 rounded-full text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all cursor-pointer"
+              >
+                Vault
+              </button>
+            </>
+          ) : isStudent ? (
+            <>
+              <button
+                onClick={() => openModal('recycle')}
+                className="px-3 py-1 rounded-full text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all cursor-pointer"
+              >
+                Drop-Off
+              </button>
+              <button
+                onClick={() => openModal('vault')}
+                className="px-3 py-1 rounded-full text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all cursor-pointer"
+              >
+                My Vault
+              </button>
+            </>
+          ) : isCollegeAdmin ? (
+            <>
+              <button
+                onClick={() => openModal('vault')}
+                className="px-3 py-1 rounded-full text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all cursor-pointer"
+              >
+                Admin Vault
+              </button>
+              <button
+                onClick={() => openModal('terminal')}
+                className="px-3 py-1 rounded-full text-xs font-medium text-cyan hover:text-cyan-bright hover:bg-cyan/10 transition-all cursor-pointer"
+              >
+                Kiosk Terminal
+              </button>
+            </>
+          ) : isKioskOperator ? (
+            <button
+              onClick={() => openModal('terminal')}
+              className="px-3 py-1 rounded-full text-xs font-medium text-cyan hover:text-cyan-bright hover:bg-cyan/10 transition-all cursor-pointer"
+            >
+              Operator Terminal
+            </button>
+          ) : null}
         </nav>
 
         {/* ACTIONS, AUTH STATE & VIEW SWITCHER */}
@@ -122,13 +159,17 @@ export const TopNav: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <div
                   className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
-                    currentUser.role === 'college_admin'
+                    isCollegeAdmin
                       ? 'bg-emerald/20 text-emerald border border-emerald/40'
+                      : isKioskOperator
+                      ? 'bg-amber/20 text-amber border border-amber/40'
                       : 'bg-cyan/20 text-cyan border border-cyan/40'
                   }`}
                 >
-                  {currentUser.role === 'college_admin' ? (
+                  {isCollegeAdmin ? (
                     <Shield className="w-3 h-3" />
+                  ) : isKioskOperator ? (
+                    <Scan className="w-3 h-3" />
                   ) : (
                     <GraduationCap className="w-3 h-3" />
                   )}
@@ -138,12 +179,14 @@ export const TopNav: React.FC = () => {
                 </span>
                 <span
                   className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                    currentUser.role === 'college_admin'
+                    isCollegeAdmin
                       ? 'bg-emerald/15 text-emerald border border-emerald/30'
+                      : isKioskOperator
+                      ? 'bg-amber/15 text-amber border border-amber/30'
                       : 'bg-cyan/15 text-cyan border border-cyan/30'
                   }`}
                 >
-                  {currentUser.role === 'college_admin' ? 'ADMIN' : 'STUDENT'}
+                  {isCollegeAdmin ? 'ADMIN' : isKioskOperator ? 'OPERATOR' : 'STUDENT'}
                 </span>
               </div>
 

@@ -212,7 +212,12 @@ export const Stage1ProductVault: React.FC = () => {
       )}
 
       {/* CATALOG GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1 no-scrollbar">
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto overscroll-contain pr-1 no-scrollbar"
+        data-lenis-prevent="true"
+        data-lenis-prevent-wheel="true"
+        data-lenis-prevent-touch="true"
+      >
         {filteredProducts.map((product) => {
           const isSelected = selectedProduct?.id === product.id
           return (

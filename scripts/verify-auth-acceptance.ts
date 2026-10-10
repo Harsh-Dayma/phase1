@@ -120,14 +120,63 @@ async function runAcceptanceTests() {
   ) {
     console.log(`  ✓ PASSED: College Admin session established (${adminSession.user.name} • ${adminSession.user.adminDesignation}).`)
     console.log('  ✓ PASSED: College Admin granted Kiosk Operator Terminal & Admin Vault access.')
+    console.log('  ✓ PASSED: College Admin CANNOT access Student Drop-off.')
   } else {
     throw new Error('TEST 7 FAILED: Admin login / permissions failed.')
+  }
+
+  const adminDropoffAttempt = AuthService.hasPermission(adminSession, 'student_dropoff')
+  if (adminDropoffAttempt) {
+    throw new Error('TEST 7 FAILED: Admin was improperly granted student_dropoff permission.')
+  }
+
+  // Explicit logout before switching to Kiosk Operator
+  await AuthService.logout()
+
+  // ---------------------------------------------------------------------------
+  // TEST 8: Kiosk Operator Login & Distinct Role Isolation
+  // ---------------------------------------------------------------------------
+  console.log('\nTEST 8: Kiosk Operator Login (Arun Verma • Kiosk Operator)')
+  const operatorSession = await AuthService.login('arun.verma@dtu.ac.in', 'operator123')
+  const opTerminalAccess = AuthService.hasPermission(operatorSession, 'kiosk_operator_terminal')
+  const opDropoffAccess = AuthService.hasPermission(operatorSession, 'student_dropoff')
+  const opAdminVaultAccess = AuthService.hasPermission(operatorSession, 'admin_tech_vault')
+  const opStudentVaultAccess = AuthService.hasPermission(operatorSession, 'student_personal_vault')
+
+  if (
+    operatorSession.user.role === 'kiosk_operator' &&
+    opTerminalAccess &&
+    !opDropoffAccess &&
+    !opAdminVaultAccess &&
+    !opStudentVaultAccess
+  ) {
+    console.log(`  ✓ PASSED: Kiosk Operator session established (${operatorSession.user.name} • ${operatorSession.user.operatorStation}).`)
+    console.log('  ✓ PASSED: Kiosk Operator granted access ONLY to Kiosk Operator Terminal.')
+    console.log('  ✓ PASSED: Kiosk Operator CANNOT access Student Drop-off.')
+    console.log('  ✓ PASSED: Kiosk Operator CANNOT access Admin Tech Vault or Student Vault.')
+  } else {
+    throw new Error('TEST 8 FAILED: Kiosk Operator role isolation failed.')
+  }
+
+  // Tamper check: Operator tries to elevate to College Admin
+  const tamperedOperatorSession = {
+    ...operatorSession,
+    user: {
+      ...operatorSession.user,
+      role: 'college_admin' as const
+    }
+  }
+  const tamperedOpAdminVault = AuthService.hasPermission(tamperedOperatorSession, 'admin_tech_vault')
+  if (!tamperedOpAdminVault) {
+    console.log('  ✓ PASSED: Operator client-side role elevation to college_admin was rejected by server registry!')
+  } else {
+    throw new Error('TEST 8 FAILED: Operator role elevation was not rejected.')
   }
 
   // Clean up
   await AuthService.logout()
   console.log('\n===========================================================================')
-  console.log('ALL 7 ACCEPTANCE CRITERIA PASSED SUCCESSFULLY WITH ZERO SECURITY DEFECTS!')
+  console.log('ALL 8 ACCEPTANCE CRITERIA PASSED ACROSS ALL 3 ROLES (STUDENT, ADMIN, OPERATOR)!')
   console.log('===========================================================================')
 }
 

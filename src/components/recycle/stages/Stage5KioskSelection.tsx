@@ -346,7 +346,12 @@ export const Stage5KioskSelection: React.FC = () => {
           </div>
 
           {/* TAB CONTENT LIST (SCROLLABLE) */}
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar min-h-0">
+          <div
+            className="flex-1 overflow-y-auto overscroll-contain space-y-2 pr-1 no-scrollbar min-h-0"
+            data-lenis-prevent="true"
+            data-lenis-prevent-wheel="true"
+            data-lenis-prevent-touch="true"
+          >
             {/* --------------------------------------------------------------- */}
             {/* TAB 1: DROP-OFF KIOSK PODS                                      */}
             {/* --------------------------------------------------------------- */}

@@ -10,23 +10,46 @@ import { LoginModal } from '../auth/LoginModal'
 export const Modals: React.FC = () => {
   const { activeModal, openModal } = useWorldStore()
   const { setActiveTab } = useRecycleStore()
-  const { isAuthenticated, isLoginModalOpen, openLoginModal } = useAuthStore()
+  const { isAuthenticated, currentUser, isLoginModalOpen, openLoginModal } = useAuthStore()
 
   useEffect(() => {
+    if (!activeModal) return
+
+    const isStudent = currentUser?.role === 'student'
+    const isCollegeAdmin = currentUser?.role === 'college_admin'
+    const isKioskOperator = currentUser?.role === 'kiosk_operator'
+
     if (activeModal === 'vault') {
       if (!isAuthenticated) {
         openLoginModal('Please authenticate with your student or campus admin account to access the Tech Vault.')
+      } else if (isKioskOperator) {
+        // Operators do not have vault access
+        setActiveTab('kiosk_terminal')
       } else {
         setActiveTab('tech_vault')
       }
     } else if (activeModal === 'recycle') {
       if (!isAuthenticated) {
-        openLoginModal('Please authenticate to initiate a student drop-off or operator terminal session.')
+        openLoginModal('Please authenticate to access the Student Drop-Off portal.')
+      } else if (isCollegeAdmin) {
+        // Admins do not participate in student drop-off
+        setActiveTab('tech_vault')
+      } else if (isKioskOperator) {
+        setActiveTab('kiosk_terminal')
       } else {
         setActiveTab('student_flow')
       }
+    } else if (activeModal === 'terminal') {
+      if (!isAuthenticated) {
+        openLoginModal('Please authenticate with an authorized kiosk operator or college admin account.')
+      } else if (isStudent) {
+        // Students do not have operator terminal access
+        setActiveTab('student_flow')
+      } else {
+        setActiveTab('kiosk_terminal')
+      }
     }
-  }, [activeModal, isAuthenticated, setActiveTab, openLoginModal])
+  }, [activeModal, isAuthenticated, currentUser?.role, setActiveTab, openLoginModal])
 
   // Always render LoginModal if open
   if (isLoginModalOpen) {
@@ -35,8 +58,8 @@ export const Modals: React.FC = () => {
 
   if (!activeModal) return null
 
-  // If user opens Recycle or Vault and is authenticated, render RecycleModuleModal
-  if (isAuthenticated && (activeModal === 'recycle' || activeModal === 'vault')) {
+  // If user opens Recycle, Vault, or Terminal and is authenticated, render RecycleModuleModal
+  if (isAuthenticated && (activeModal === 'recycle' || activeModal === 'vault' || activeModal === 'terminal')) {
     return (
       <AnimatePresence>
         <RecycleModuleModal />
@@ -44,8 +67,8 @@ export const Modals: React.FC = () => {
     )
   }
 
-  // If unauthenticated and tried to open recycle/vault, show login
-  if (!isAuthenticated && (activeModal === 'recycle' || activeModal === 'vault')) {
+  // If unauthenticated and tried to open recycle/vault/terminal, show login
+  if (!isAuthenticated && (activeModal === 'recycle' || activeModal === 'vault' || activeModal === 'terminal')) {
     return <LoginModal />
   }
 

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { PRODUCT_CATALOG, type ProductRecord, type DeviceCategory } from '../data/productVaultCatalog'
 import { CAMPUS_KIOSKS, type CampusKiosk } from '../data/kiosks'
 import { useWorldStore } from './useWorldStore'
+import { useAuthStore } from './useAuthStore'
 
 export type ConditionTriage = 'mint' | 'cracked' | 'dead' | 'swollen_battery'
 
@@ -64,6 +65,11 @@ export interface EphemeralPass {
   projectedXp: number
   status: 'pending' | 'accepted' | 'rejected' | 'expired'
   qrPayload: string
+  // Submitter identity for role-based privacy & admin audits
+  userId?: string
+  studentName?: string
+  studentRollNo?: string
+  department?: string
   receipt?: EphemeralPassReceipt
   rejection?: EphemeralPassRejection
 }
@@ -171,7 +177,8 @@ function loadSavedPasses(): EphemeralPass[] {
     console.error('Failed to parse saved passes', err)
   }
 
-  // Seed with 1 initial demo completed submission so Tech Vault & Terminal feel authentic right away!
+  // Seed with realistic demo completed submissions across multiple students
+  // to rigorously test student privacy isolation and admin oversight
   return [
     {
       passId: 'SIG-88F4B91-DTU',
@@ -196,6 +203,10 @@ function loadSavedPasses(): EphemeralPass[] {
       projectedEcoCredits: 180,
       projectedXp: 225,
       status: 'accepted',
+      userId: 'usr_student_dtu_01',
+      studentName: 'Aarav Sharma',
+      studentRollNo: '2023/EE/042',
+      department: 'Electrical Engineering',
       qrPayload: JSON.stringify({
         ref: 'SIG-88F4B91-DTU',
         prod: 'iPhone 11',
@@ -204,7 +215,7 @@ function loadSavedPasses(): EphemeralPass[] {
       }),
       receipt: {
         acceptedAt: new Date(Date.now() - 3600000 * 24 * 2).toLocaleString(),
-        operatorName: 'Kavita Sharma (Lead Lab Tech)',
+        operatorName: 'Arun Verma (Lead Lab Tech)',
         kioskId: 'kiosk-dtu-mech',
         kioskName: 'DTU Mechanical Block Kiosk',
         campusId: 'dtu',
@@ -217,6 +228,89 @@ function loadSavedPasses(): EphemeralPass[] {
         certificateId: 'REC-DTU-2026-0941',
         digitalSignature: 'SHA256:7B8C24D9E9F01A4B'
       }
+    },
+    {
+      passId: 'SIG-39A7C12-NSUT',
+      timestamp: Date.now() - 3600000 * 24 * 5,
+      expiresAt: Date.now() - 3600000 * 24 * 5 + 900000,
+      productId: 'prod-mb-air-m1',
+      productName: 'MacBook Air M1',
+      manufacturer: 'Apple',
+      variant: '256GB / 8GB Unified',
+      category: 'laptops',
+      condition: 'mint',
+      declaredMassGrams: 1290,
+      isHazmat: false,
+      dataWipeConfirmed: true,
+      dataWipeException: false,
+      kioskId: 'kiosk-nsut-admin',
+      kioskName: 'NSUT Main Admin Quad Kiosk',
+      campusId: 'nsut',
+      campusName: 'Netaji Subhas University of Technology',
+      turfMultiplier: 1.2,
+      estimatedCo2eKg: 165.0,
+      projectedEcoCredits: 520,
+      projectedXp: 680,
+      status: 'accepted',
+      userId: 'usr_student_nsut_02',
+      studentName: 'Priya Verma',
+      studentRollNo: '2023/CS/118',
+      department: 'Computer Science',
+      qrPayload: JSON.stringify({
+        ref: 'SIG-39A7C12-NSUT',
+        prod: 'MacBook Air M1',
+        kiosk: 'kiosk-nsut-admin',
+        status: 'accepted'
+      }),
+      receipt: {
+        acceptedAt: new Date(Date.now() - 3600000 * 24 * 5).toLocaleString(),
+        operatorName: 'Deepak Joshi (Kiosk Operator)',
+        kioskId: 'kiosk-nsut-admin',
+        kioskName: 'NSUT Main Admin Quad Kiosk',
+        campusId: 'nsut',
+        campusName: 'Netaji Subhas University of Technology',
+        verifiedWeightGrams: 1292.0,
+        scaleVariancePercent: 0.15,
+        awardedEcoCredits: 520,
+        awardedXp: 680,
+        kgAddedToCampus: 1.29,
+        certificateId: 'REC-NSUT-2026-0318',
+        digitalSignature: 'SHA256:4C9F10A38E221DB7'
+      }
+    },
+    {
+      passId: 'SIG-21F5D88-DTU',
+      timestamp: Date.now() - 3600000 * 18,
+      expiresAt: Date.now() - 3600000 * 18 + 900000,
+      productId: 'prod-sony-wh1000xm4',
+      productName: 'Sony WH-1000XM4',
+      manufacturer: 'Sony',
+      variant: 'Wireless ANC Black',
+      category: 'audio',
+      condition: 'dead',
+      declaredMassGrams: 254,
+      isHazmat: false,
+      dataWipeConfirmed: true,
+      dataWipeException: false,
+      kioskId: 'kiosk-dtu-mech',
+      kioskName: 'DTU Mechanical Block Kiosk',
+      campusId: 'dtu',
+      campusName: 'Delhi Technological University',
+      turfMultiplier: 1.5,
+      estimatedCo2eKg: 32.5,
+      projectedEcoCredits: 120,
+      projectedXp: 150,
+      status: 'pending',
+      userId: 'usr_student_dtu_01',
+      studentName: 'Aarav Sharma',
+      studentRollNo: '2023/EE/042',
+      department: 'Electrical Engineering',
+      qrPayload: JSON.stringify({
+        ref: 'SIG-21F5D88-DTU',
+        prod: 'Sony WH-1000XM4',
+        kiosk: 'kiosk-dtu-mech',
+        status: 'pending'
+      })
     }
   ]
 }
@@ -440,6 +534,8 @@ export const useRecycleStore = create<RecycleStoreState>((set, get) => ({
       kid: kiosk.id
     })
 
+    const currentUser = useAuthStore.getState().currentUser
+
     const newPass: EphemeralPass = {
       passId,
       timestamp: Date.now(),
@@ -464,7 +560,11 @@ export const useRecycleStore = create<RecycleStoreState>((set, get) => ({
       projectedEcoCredits,
       projectedXp,
       status: 'pending',
-      qrPayload
+      qrPayload,
+      userId: currentUser?.id,
+      studentName: currentUser?.name || 'Aarav Sharma',
+      studentRollNo: currentUser?.studentRollNo || '2023/EE/042',
+      department: currentUser?.department || 'Electrical Engineering'
     }
 
     const updatedPasses = [newPass, ...state.savedPasses]

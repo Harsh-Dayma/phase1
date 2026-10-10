@@ -11,7 +11,8 @@ import {
   X,
   Sparkles,
   Building,
-  UserCheck
+  UserCheck,
+  Scan
 } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { PRESET_USERS } from '../../types/auth'
@@ -27,21 +28,24 @@ export const LoginModal: React.FC = () => {
     clearError
   } = useAuthStore()
 
-  const [activeTab, setActiveTab] = useState<'student' | 'admin'>('student')
+  const [activeTab, setActiveTab] = useState<'student' | 'admin' | 'operator'>('student')
   const [email, setEmail] = useState<string>('aarav.sharma@dtu.ac.in')
   const [password, setPassword] = useState<string>('pass123')
 
   if (!isLoginModalOpen) return null
 
-  const handleTabChange = (tab: 'student' | 'admin') => {
+  const handleTabChange = (tab: 'student' | 'admin' | 'operator') => {
     setActiveTab(tab)
     clearError()
     if (tab === 'student') {
       setEmail('aarav.sharma@dtu.ac.in')
       setPassword('pass123')
-    } else {
+    } else if (tab === 'admin') {
       setEmail('kavita.sharma@dtu.ac.in')
       setPassword('admin123')
+    } else {
+      setEmail('arun.verma@dtu.ac.in')
+      setPassword('operator123')
     }
   }
 
@@ -51,14 +55,23 @@ export const LoginModal: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-2xl overflow-y-auto">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-lg my-auto rounded-3xl liquid-glass specular-rim shadow-2xl border border-white/15 overflow-hidden flex flex-col relative"
-      >
+    <div
+      data-lenis-prevent="true"
+      data-lenis-prevent-wheel="true"
+      data-lenis-prevent-touch="true"
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-black/80 backdrop-blur-2xl"
+    >
+      <div className="min-h-full flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="pointer-events-auto w-full max-w-lg my-auto rounded-3xl liquid-glass specular-rim shadow-2xl border border-white/15 overflow-hidden flex flex-col relative"
+          data-lenis-prevent="true"
+          data-lenis-prevent-wheel="true"
+          data-lenis-prevent-touch="true"
+        >
         {/* Close Button */}
         <button
           onClick={closeLoginModal}
@@ -79,35 +92,48 @@ export const LoginModal: React.FC = () => {
             Authenticate Session
           </h3>
           <p className="text-xs text-text-secondary mt-1">
-            Sign in with institutional credentials to access student drop-off lockers, verify tech vault certificates, or operate campus kiosk hubs.
+            Sign in with verified credentials to access authorized drop-off lockers, view vault records, or operate kiosk terminals.
           </p>
 
-          {/* Role Segmented Controller */}
-          <div className="mt-4 grid grid-cols-2 gap-1 p-1 rounded-2xl bg-black/50 border border-white/10 text-xs font-mono">
+          {/* Three-Role Segmented Controller */}
+          <div className="mt-4 grid grid-cols-3 gap-1 p-1 rounded-2xl bg-black/50 border border-white/10 text-xs font-mono">
             <button
               type="button"
               onClick={() => handleTabChange('student')}
-              className={`flex items-center justify-center gap-2 py-2 rounded-xl font-bold transition-all ${
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl font-bold transition-all ${
                 activeTab === 'student'
                   ? 'bg-cyan text-black shadow-cyan-glow'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
               <GraduationCap className="w-3.5 h-3.5" />
-              <span>Student Portal</span>
+              <span className="truncate">Student</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleTabChange('admin')}
-              className={`flex items-center justify-center gap-2 py-2 rounded-xl font-bold transition-all ${
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl font-bold transition-all ${
                 activeTab === 'admin'
                   ? 'bg-emerald text-black shadow-emerald-glow'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
               <Shield className="w-3.5 h-3.5" />
-              <span>College Admin</span>
+              <span className="truncate">Admin</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTabChange('operator')}
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl font-bold transition-all ${
+                activeTab === 'operator'
+                  ? 'bg-amber text-black shadow-amber-glow'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              <Scan className="w-3.5 h-3.5" />
+              <span className="truncate">Operator</span>
             </button>
           </div>
         </div>
@@ -134,7 +160,7 @@ export const LoginModal: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
               <label className="block text-[11px] font-mono text-text-secondary uppercase mb-1">
-                Institutional Email / Campus ID
+                Institutional Email / ID
               </label>
               <div className="relative">
                 <input
@@ -170,7 +196,9 @@ export const LoginModal: React.FC = () => {
               className={`w-full py-3 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-200 mt-2 ${
                 activeTab === 'student'
                   ? 'bg-cyan hover:bg-cyan-bright text-black shadow-cyan-glow'
-                  : 'bg-emerald hover:bg-emerald-bright text-black shadow-emerald-glow'
+                  : activeTab === 'admin'
+                  ? 'bg-emerald hover:bg-emerald-bright text-black shadow-emerald-glow'
+                  : 'bg-amber hover:bg-amber-bright text-black shadow-amber-glow'
               }`}
             >
               <span>{isLoading ? 'Verifying Credentials...' : 'Sign In To Session'}</span>
@@ -185,7 +213,7 @@ export const LoginModal: React.FC = () => {
             </span>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
-              {activeTab === 'student' ? (
+              {activeTab === 'student' && (
                 <>
                   <button
                     type="button"
@@ -217,7 +245,9 @@ export const LoginModal: React.FC = () => {
                     </div>
                   </button>
                 </>
-              ) : (
+              )}
+
+              {activeTab === 'admin' && (
                 <>
                   <button
                     type="button"
@@ -230,7 +260,41 @@ export const LoginModal: React.FC = () => {
                     <Shield className="w-3.5 h-3.5 text-emerald shrink-0" />
                     <div className="truncate">
                       <div className="text-text-primary font-bold group-hover:text-emerald">Kavita Sharma</div>
-                      <div className="text-[10px] text-text-muted truncate">DTU Lead Lab Tech (Admin)</div>
+                      <div className="text-[10px] text-text-muted truncate">DTU Facility Director (Admin)</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('dean.sustainability@nsut.ac.in')
+                      setPassword('admin123')
+                    }}
+                    className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-left transition-colors flex items-center gap-2 group"
+                  >
+                    <Shield className="w-3.5 h-3.5 text-emerald shrink-0" />
+                    <div className="truncate">
+                      <div className="text-text-primary font-bold group-hover:text-emerald">Dr. Mukherjee</div>
+                      <div className="text-[10px] text-text-muted truncate">NSUT Sustainability Dean</div>
+                    </div>
+                  </button>
+                </>
+              )}
+
+              {activeTab === 'operator' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('arun.verma@dtu.ac.in')
+                      setPassword('operator123')
+                    }}
+                    className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-left transition-colors flex items-center gap-2 group"
+                  >
+                    <Scan className="w-3.5 h-3.5 text-amber shrink-0" />
+                    <div className="truncate">
+                      <div className="text-text-primary font-bold group-hover:text-amber">Arun Verma</div>
+                      <div className="text-[10px] text-text-muted truncate">DTU Mech Pod Kiosk Operator</div>
                     </div>
                   </button>
 
@@ -238,14 +302,14 @@ export const LoginModal: React.FC = () => {
                     type="button"
                     onClick={() => {
                       setEmail('deepak.joshi@nsut.ac.in')
-                      setPassword('admin123')
+                      setPassword('operator123')
                     }}
                     className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-left transition-colors flex items-center gap-2 group"
                   >
-                    <Shield className="w-3.5 h-3.5 text-emerald shrink-0" />
+                    <Scan className="w-3.5 h-3.5 text-amber shrink-0" />
                     <div className="truncate">
-                      <div className="text-text-primary font-bold group-hover:text-emerald">Deepak Joshi</div>
-                      <div className="text-[10px] text-text-muted truncate">NSUT Operations Manager</div>
+                      <div className="text-text-primary font-bold group-hover:text-amber">Deepak Joshi</div>
+                      <div className="text-[10px] text-text-muted truncate">NSUT Sector-3 Kiosk Operator</div>
                     </div>
                   </button>
                 </>
@@ -257,11 +321,12 @@ export const LoginModal: React.FC = () => {
           <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-[10px] font-mono text-text-muted flex items-start gap-2">
             <Lock className="w-3.5 h-3.5 text-text-muted shrink-0 mt-0.5" />
             <span>
-              Secure Session Rule: Direct user switching is disabled. To sign in as a different student or college admin, you must explicitly log out first.
+              Explicit Logout Security: User switching is disabled during an active session. You must explicitly log out before another user can sign in.
             </span>
           </div>
         </div>
       </motion.div>
+      </div>
     </div>
   )
 }
