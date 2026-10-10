@@ -74,7 +74,9 @@ export const RecycleModuleModal: React.FC = () => {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 20 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-4xl my-auto rounded-3xl liquid-glass specular-rim shadow-2xl border border-white/15 overflow-hidden flex flex-col max-h-[92vh]"
+        className={`w-full ${
+          activeTab === 'student_flow' && currentStep === 5 ? 'max-w-6xl' : 'max-w-4xl'
+        } my-auto rounded-3xl liquid-glass specular-rim shadow-2xl border border-white/15 overflow-hidden flex flex-col max-h-[92vh] transition-all duration-300`}
       >
         {/* ========================================================================= */}
         {/* HEADER: MODE SEGMENTED CONTROL & CLOSE BUTTON                             */}

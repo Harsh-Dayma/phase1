@@ -15,6 +15,7 @@ export interface CampusKiosk {
   availableLockerSlots: number
   operatorOnDuty: string
   contactExtension: string
+  coords: [number, number]
 }
 
 export const CAMPUS_KIOSKS: CampusKiosk[] = [
@@ -34,7 +35,8 @@ export const CAMPUS_KIOSKS: CampusKiosk[] = [
     turfBonusMultiplier: 1.5,
     availableLockerSlots: 6,
     operatorOnDuty: 'Kavita Sharma (Lead Lab Tech)',
-    contactExtension: 'Ext. 4022'
+    contactExtension: 'Ext. 4022',
+    coords: [28.7514, 77.1166]
   },
   {
     id: 'kiosk-dtu-lib',
@@ -52,7 +54,8 @@ export const CAMPUS_KIOSKS: CampusKiosk[] = [
     turfBonusMultiplier: 1.2,
     availableLockerSlots: 4,
     operatorOnDuty: 'Arun Verma (Digital Archives)',
-    contactExtension: 'Ext. 1105'
+    contactExtension: 'Ext. 1105',
+    coords: [28.7492, 77.1186]
   },
   {
     id: 'kiosk-nsut-sec3',
@@ -70,7 +73,8 @@ export const CAMPUS_KIOSKS: CampusKiosk[] = [
     turfBonusMultiplier: 1.8,
     availableLockerSlots: 8,
     operatorOnDuty: 'Deepak Joshi (Circular Hub Manager)',
-    contactExtension: 'Ext. 2380'
+    contactExtension: 'Ext. 2380',
+    coords: [28.6085, 77.0355]
   },
   {
     id: 'kiosk-iitd-bharti',
@@ -88,7 +92,8 @@ export const CAMPUS_KIOSKS: CampusKiosk[] = [
     turfBonusMultiplier: 1.6,
     availableLockerSlots: 10,
     operatorOnDuty: 'Rohan Sen (IoT Lab Custodian)',
-    contactExtension: 'Ext. 7701'
+    contactExtension: 'Ext. 7701',
+    coords: [28.5450, 77.1926]
   },
   {
     id: 'kiosk-iitb-cse',
@@ -106,7 +111,8 @@ export const CAMPUS_KIOSKS: CampusKiosk[] = [
     turfBonusMultiplier: 2.0,
     availableLockerSlots: 12,
     operatorOnDuty: 'Sneha Patil (Sustainable Systems Lab)',
-    contactExtension: 'Ext. 8412'
+    contactExtension: 'Ext. 8412',
+    coords: [19.1334, 72.9133]
   },
   {
     id: 'kiosk-mit-stata',
@@ -124,7 +130,8 @@ export const CAMPUS_KIOSKS: CampusKiosk[] = [
     turfBonusMultiplier: 2.2,
     availableLockerSlots: 16,
     operatorOnDuty: 'Marcus Vance (MIT Facilities & Green Lab)',
-    contactExtension: 'Ext. 3910'
+    contactExtension: 'Ext. 3910',
+    coords: [42.3616, -71.0906]
   },
   {
     id: 'kiosk-stanford-gates',
@@ -142,6 +149,7 @@ export const CAMPUS_KIOSKS: CampusKiosk[] = [
     turfBonusMultiplier: 1.7,
     availableLockerSlots: 7,
     operatorOnDuty: 'Elena Gomez (Campus Sustainability)',
-    contactExtension: 'Ext. 6140'
+    contactExtension: 'Ext. 6140',
+    coords: [37.4300, -122.1733]
   }
 ]
