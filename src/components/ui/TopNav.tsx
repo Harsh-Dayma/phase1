@@ -5,10 +5,13 @@ import {
   Building2,
   Sparkles,
   Trophy,
-  Recycle,
-  FolderArchive
+  LogIn,
+  LogOut,
+  Shield,
+  GraduationCap
 } from 'lucide-react'
 import { useWorldStore } from '../../store/useWorldStore'
+import { useAuthStore } from '../../store/useAuthStore'
 
 export const TopNav: React.FC = () => {
   const {
@@ -22,6 +25,13 @@ export const TopNav: React.FC = () => {
     isLeftDrawerOpen
   } = useWorldStore()
 
+  const {
+    currentUser,
+    isAuthenticated,
+    logout,
+    openLoginModal
+  } = useAuthStore()
+
   const navChapters = [
     { id: 0, label: 'Story' },
     { id: 1, label: 'The Crisis' },
@@ -31,7 +41,7 @@ export const TopNav: React.FC = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-4 sm:px-8 py-5 pointer-events-none">
-      <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+      <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
         
         {/* BRAND PILL */}
         <div className="flex items-center gap-3 pointer-events-auto">
@@ -79,21 +89,86 @@ export const TopNav: React.FC = () => {
           <div className="w-[1px] h-3.5 bg-white/10 mx-1" />
 
           <button
-            onClick={() => openModal('recycle')}
+            onClick={() => {
+              if (!isAuthenticated) {
+                openLoginModal('Please authenticate to access the Student Drop-Off portal.')
+              } else {
+                openModal('recycle')
+              }
+            }}
             className="px-3 py-1 rounded-full text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all"
           >
             Recycle
           </button>
           <button
-            onClick={() => openModal('vault')}
+            onClick={() => {
+              if (!isAuthenticated) {
+                openLoginModal('Please authenticate to access your Tech Vault.')
+              } else {
+                openModal('vault')
+              }
+            }}
             className="px-3 py-1 rounded-full text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all"
           >
             Vault
           </button>
         </nav>
 
-        {/* ACTIONS & VIEW SWITCHER */}
+        {/* ACTIONS, AUTH STATE & VIEW SWITCHER */}
         <div className="flex items-center gap-2 pointer-events-auto">
+          {/* USER AUTHENTICATION & LOGOUT CONTROL */}
+          {isAuthenticated && currentUser ? (
+            <div className="flex items-center gap-2 pl-2.5 pr-1.5 py-1 rounded-full liquid-glass-pill specular-rim text-xs font-mono shadow-lg">
+              <div className="flex items-center gap-1.5">
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+                    currentUser.role === 'college_admin'
+                      ? 'bg-emerald/20 text-emerald border border-emerald/40'
+                      : 'bg-cyan/20 text-cyan border border-cyan/40'
+                  }`}
+                >
+                  {currentUser.role === 'college_admin' ? (
+                    <Shield className="w-3 h-3" />
+                  ) : (
+                    <GraduationCap className="w-3 h-3" />
+                  )}
+                </div>
+                <span className="font-bold text-text-primary hidden sm:inline max-w-[120px] truncate">
+                  {currentUser.name}
+                </span>
+                <span
+                  className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                    currentUser.role === 'college_admin'
+                      ? 'bg-emerald/15 text-emerald border border-emerald/30'
+                      : 'bg-cyan/15 text-cyan border border-cyan/30'
+                  }`}
+                >
+                  {currentUser.role === 'college_admin' ? 'ADMIN' : 'STUDENT'}
+                </span>
+              </div>
+
+              {/* FUNCTIONAL LOGOUT BUTTON (VISIBLE ONLY AFTER LOGIN) */}
+              <button
+                id="btn-app-logout"
+                onClick={() => logout()}
+                title="Log Out of Current Session"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 hover:bg-amber/20 hover:text-amber text-text-muted transition-all border border-white/10 hover:border-amber/30 text-[11px] font-bold cursor-pointer"
+              >
+                <LogOut className="w-3 h-3" />
+                <span className="hidden md:inline">Log Out</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              id="btn-app-login"
+              onClick={() => openLoginModal()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan/15 hover:bg-cyan/25 text-cyan border border-cyan/30 transition-all text-xs font-bold shadow-cyan-glow"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+          )}
+
           {/* Rankings Drawer Toggle */}
           {viewMode === 'globe' && (
             <button
@@ -150,4 +225,5 @@ export const TopNav: React.FC = () => {
     </header>
   )
 }
+
 

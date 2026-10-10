@@ -3,29 +3,50 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Sparkles, Building2, CheckCircle2 } from 'lucide-react'
 import { useWorldStore } from '../../store/useWorldStore'
 import { useRecycleStore } from '../../store/useRecycleStore'
+import { useAuthStore } from '../../store/useAuthStore'
 import { RecycleModuleModal } from '../recycle/RecycleModuleModal'
+import { LoginModal } from '../auth/LoginModal'
 
 export const Modals: React.FC = () => {
   const { activeModal, openModal } = useWorldStore()
   const { setActiveTab } = useRecycleStore()
+  const { isAuthenticated, isLoginModalOpen, openLoginModal } = useAuthStore()
 
   useEffect(() => {
     if (activeModal === 'vault') {
-      setActiveTab('tech_vault')
+      if (!isAuthenticated) {
+        openLoginModal('Please authenticate with your student or campus admin account to access the Tech Vault.')
+      } else {
+        setActiveTab('tech_vault')
+      }
     } else if (activeModal === 'recycle') {
-      setActiveTab('student_flow')
+      if (!isAuthenticated) {
+        openLoginModal('Please authenticate to initiate a student drop-off or operator terminal session.')
+      } else {
+        setActiveTab('student_flow')
+      }
     }
-  }, [activeModal, setActiveTab])
+  }, [activeModal, isAuthenticated, setActiveTab, openLoginModal])
+
+  // Always render LoginModal if open
+  if (isLoginModalOpen) {
+    return <LoginModal />
+  }
 
   if (!activeModal) return null
 
-  // If user opens Recycle or Vault, render the Phase 1 E-Waste Recycling & Product Vault Module
-  if (activeModal === 'recycle' || activeModal === 'vault') {
+  // If user opens Recycle or Vault and is authenticated, render RecycleModuleModal
+  if (isAuthenticated && (activeModal === 'recycle' || activeModal === 'vault')) {
     return (
       <AnimatePresence>
         <RecycleModuleModal />
       </AnimatePresence>
     )
+  }
+
+  // If unauthenticated and tried to open recycle/vault, show login
+  if (!isAuthenticated && (activeModal === 'recycle' || activeModal === 'vault')) {
+    return <LoginModal />
   }
 
   const isPitch = activeModal === 'sponsor_pitch'

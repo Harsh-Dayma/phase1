@@ -12,10 +12,15 @@ import {
   MapPin,
   QrCode,
   ShieldCheck,
-  Smartphone
+  Smartphone,
+  LogOut,
+  Shield,
+  ShieldAlert,
+  GraduationCap
 } from 'lucide-react'
 import { useRecycleStore } from '../../store/useRecycleStore'
 import { useWorldStore } from '../../store/useWorldStore'
+import { useAuthStore } from '../../store/useAuthStore'
 import { MascotVolt } from './MascotVolt'
 import { Stage1ProductVault } from './stages/Stage1ProductVault'
 import { Stage2ConditionTriage } from './stages/Stage2ConditionTriage'
@@ -37,6 +42,7 @@ const STEPS = [
 
 export const RecycleModuleModal: React.FC = () => {
   const { openModal } = useWorldStore()
+  const { currentUser, logout } = useAuthStore()
   const {
     activeTab,
     setActiveTab,
@@ -48,6 +54,8 @@ export const RecycleModuleModal: React.FC = () => {
     customProduct,
     condition
   } = useRecycleStore()
+
+  const isCollegeAdmin = currentUser?.role === 'college_admin'
 
   // Handle ESC key to close
   useEffect(() => {
@@ -79,10 +87,10 @@ export const RecycleModuleModal: React.FC = () => {
         } my-auto rounded-3xl liquid-glass specular-rim shadow-2xl border border-white/15 overflow-hidden flex flex-col max-h-[92vh] transition-all duration-300`}
       >
         {/* ========================================================================= */}
-        {/* HEADER: MODE SEGMENTED CONTROL & CLOSE BUTTON                             */}
+        {/* HEADER: MODE SEGMENTED CONTROL, USER IDENTITY & LOGOUT                    */}
         {/* ========================================================================= */}
-        <div className="px-5 py-3.5 border-b border-white/[0.08] flex items-center justify-between gap-3 bg-white/[0.02] shrink-0">
-          {/* TAB SWITCHER PILL */}
+        <div className="px-5 py-3.5 border-b border-white/[0.08] flex items-center justify-between gap-3 bg-white/[0.02] shrink-0 flex-wrap sm:flex-nowrap">
+          {/* TAB SWITCHER PILL WITH ROLE SECURITY */}
           <div className="flex items-center gap-1 p-1 rounded-full bg-white/[0.04] border border-white/10 text-xs">
             <button
               onClick={() => setActiveTab('student_flow')}
@@ -96,16 +104,35 @@ export const RecycleModuleModal: React.FC = () => {
               <span>Student Drop-Off</span>
             </button>
 
+            {/* KIOSK OPERATOR TERMINAL: RESTRICTED TO COLLEGE ADMIN */}
             <button
-              onClick={() => setActiveTab('kiosk_terminal')}
+              onClick={() => {
+                if (!isCollegeAdmin) {
+                  // Restricted from student role
+                  return
+                }
+                setActiveTab('kiosk_terminal')
+              }}
+              title={isCollegeAdmin ? 'Open Kiosk Operator Terminal' : 'Restricted: College Admin Role Required'}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all ${
-                activeTab === 'kiosk_terminal'
+                !isCollegeAdmin
+                  ? 'opacity-40 text-text-muted cursor-not-allowed hover:bg-transparent'
+                  : activeTab === 'kiosk_terminal'
                   ? 'bg-cyan text-background font-bold shadow-cyan-glow'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
-              <Scan className="w-3.5 h-3.5" />
+              {isCollegeAdmin ? (
+                <Scan className="w-3.5 h-3.5" />
+              ) : (
+                <Lock className="w-3.5 h-3.5 text-amber" />
+              )}
               <span>Kiosk Operator Terminal</span>
+              {!isCollegeAdmin && (
+                <span className="text-[9px] font-mono font-bold px-1 py-0.2 rounded bg-amber/20 text-amber border border-amber/40">
+                  ADMIN
+                </span>
+              )}
             </button>
 
             <button
@@ -117,15 +144,50 @@ export const RecycleModuleModal: React.FC = () => {
               }`}
             >
               <FolderArchive className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Tech Vault</span>
+              <span className="hidden sm:inline">
+                {isCollegeAdmin ? 'Institutional Vault' : 'Tech Vault'}
+              </span>
             </button>
           </div>
 
-          {/* CLOSE CONTROLS */}
+          {/* USER IDENTITY BADGE, LOGOUT & CLOSE CONTROLS */}
           <div className="flex items-center gap-2">
+            {/* Active User Identity Pill */}
+            {currentUser && (
+              <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/10 text-xs font-mono">
+                <span className="font-bold text-text-primary max-w-[110px] truncate">
+                  {currentUser.name}
+                </span>
+                <span
+                  className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                    isCollegeAdmin
+                      ? 'bg-emerald/15 text-emerald border border-emerald/30'
+                      : 'bg-cyan/15 text-cyan border border-cyan/30'
+                  }`}
+                >
+                  {isCollegeAdmin ? 'ADMIN' : 'STUDENT'}
+                </span>
+              </div>
+            )}
+
+            {/* Prominent Logout Button */}
+            <button
+              id="btn-kiosk-modal-logout"
+              onClick={async () => {
+                await logout()
+                openModal(null)
+              }}
+              title="Log Out of Current Session"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 hover:bg-amber/20 hover:text-amber text-text-muted transition-all border border-white/10 hover:border-amber/30 text-xs font-mono font-bold cursor-pointer"
+            >
+              <LogOut className="w-3 h-3" />
+              <span className="hidden sm:inline">Log Out</span>
+            </button>
+
             <kbd className="hidden sm:inline text-[9px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-text-muted">
               ESC
             </kbd>
+
             <button
               onClick={() => openModal(null)}
               className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-text-primary border border-white/10 transition-colors"
@@ -228,7 +290,27 @@ export const RecycleModuleModal: React.FC = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <KioskOperatorTerminal />
+                {isCollegeAdmin ? (
+                  <KioskOperatorTerminal />
+                ) : (
+                  <div className="p-8 text-center space-y-4 max-w-md mx-auto my-12 rounded-2xl liquid-glass border border-amber/30">
+                    <div className="w-12 h-12 rounded-2xl bg-amber/20 border border-amber/40 flex items-center justify-center text-amber mx-auto shadow-amber-glow">
+                      <ShieldAlert className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-lg font-bold text-text-primary">
+                      Access Restricted: College Admin Required
+                    </h3>
+                    <p className="text-xs text-text-secondary leading-relaxed">
+                      You are authenticated as <strong>{currentUser?.name} (Student)</strong>. The Kiosk Operator Terminal and Hardware Verification console are restricted to authorized university facility managers and laboratory custodians.
+                    </p>
+                    <button
+                      onClick={() => setActiveTab('student_flow')}
+                      className="px-5 py-2.5 rounded-xl bg-cyan hover:bg-cyan-bright text-black font-bold text-xs shadow-cyan-glow transition-all cursor-pointer"
+                    >
+                      Return to Student Drop-Off
+                    </button>
+                  </div>
+                )}
               </motion.div>
             )}
 

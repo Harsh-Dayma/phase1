@@ -10,17 +10,20 @@ import { ClusterSelectionPopover } from './components/ui/ClusterSelectionPopover
 import { ScrollStorySections } from './components/ui/ScrollStorySections'
 import { ScrollProgressHUD } from './components/ui/ScrollProgressHUD'
 import { useWorldStore } from './store/useWorldStore'
+import { useAuthStore } from './store/useAuthStore'
 import { useLenis } from './hooks/useLenis'
 
 export const App: React.FC = () => {
   const { loadData } = useWorldStore()
+  const { checkSession } = useAuthStore()
 
   // Initialize Lenis smooth scroll engine
   useLenis()
 
   useEffect(() => {
     loadData()
-  }, [loadData])
+    checkSession()
+  }, [loadData, checkSession])
 
   return (
     <div className="relative min-h-screen bg-background select-none overflow-x-hidden">
