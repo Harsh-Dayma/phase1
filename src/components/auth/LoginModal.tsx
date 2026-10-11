@@ -278,6 +278,21 @@ export const LoginModal: React.FC = () => {
                       <div className="text-[10px] text-text-muted truncate">NSUT Sustainability Dean</div>
                     </div>
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('central.admin@re-earth.eco')
+                      setPassword('admin123')
+                    }}
+                    className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-left transition-colors flex items-center gap-2 group sm:col-span-2"
+                  >
+                    <Shield className="w-3.5 h-3.5 text-cyan shrink-0" />
+                    <div className="truncate">
+                      <div className="text-text-primary font-bold group-hover:text-cyan">Dr. Alistair Vance (Central Admin)</div>
+                      <div className="text-[10px] text-text-muted truncate">RE—EARTH Global Secretariat • Cross-Campus Matching</div>
+                    </div>
+                  </button>
                 </>
               )}
 

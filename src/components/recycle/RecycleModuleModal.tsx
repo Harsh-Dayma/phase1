@@ -16,7 +16,8 @@ import {
   LogOut,
   Shield,
   ShieldAlert,
-  GraduationCap
+  GraduationCap,
+  Building2
 } from 'lucide-react'
 import { useRecycleStore } from '../../store/useRecycleStore'
 import { useWorldStore } from '../../store/useWorldStore'
@@ -30,6 +31,7 @@ import { Stage5KioskSelection } from './stages/Stage5KioskSelection'
 import { Stage6EphemeralQRPass } from './stages/Stage6EphemeralQRPass'
 import { KioskOperatorTerminal } from './operator/KioskOperatorTerminal'
 import { TechVaultDrawer } from './vault/TechVaultDrawer'
+import { CollegeAdminSponsorships } from './admin/CollegeAdminSponsorships'
 
 const STEPS = [
   { num: 1, title: 'Vault', desc: 'Identify Device' },
@@ -55,7 +57,7 @@ export const RecycleModuleModal: React.FC = () => {
     condition
   } = useRecycleStore()
 
-  const isCollegeAdmin = currentUser?.role === 'college_admin'
+  const isCollegeAdmin = currentUser?.role === 'college_admin' || currentUser?.role === 'central_admin'
   const isKioskOperator = currentUser?.role === 'kiosk_operator'
   const isStudent = currentUser?.role === 'student'
 
@@ -64,8 +66,8 @@ export const RecycleModuleModal: React.FC = () => {
     if (isKioskOperator && activeTab !== 'kiosk_terminal') {
       setActiveTab('kiosk_terminal')
     } else if (isCollegeAdmin && activeTab === 'student_flow') {
-      setActiveTab('tech_vault')
-    } else if (isStudent && activeTab === 'kiosk_terminal') {
+      setActiveTab('sponsorships')
+    } else if (isStudent && (activeTab === 'kiosk_terminal' || activeTab === 'sponsorships')) {
       setActiveTab('student_flow')
     }
   }, [currentUser?.role, activeTab, isKioskOperator, isCollegeAdmin, isStudent, setActiveTab])
@@ -103,7 +105,9 @@ export const RecycleModuleModal: React.FC = () => {
           exit={{ opacity: 0, scale: 0.96, y: 20 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className={`pointer-events-auto w-full ${
-            activeTab === 'student_flow' && currentStep === 5 ? 'max-w-6xl' : 'max-w-4xl'
+            (activeTab === 'student_flow' && currentStep === 5) || activeTab === 'sponsorships'
+              ? 'max-w-6xl'
+              : 'max-w-4xl'
           } my-auto rounded-3xl liquid-glass specular-rim shadow-2xl border border-white/15 overflow-hidden flex flex-col max-h-[92vh] transition-all duration-300`}
           data-lenis-prevent="true"
           data-lenis-prevent-wheel="true"
@@ -157,6 +161,22 @@ export const RecycleModuleModal: React.FC = () => {
                 >
                   <FolderArchive className="w-3.5 h-3.5" />
                   <span>{isCollegeAdmin ? 'Admin Tech Vault' : 'My Tech Vault'}</span>
+                </button>
+              )}
+
+              {/* 4. SPONSORSHIPS: VISIBLE ONLY TO COLLEGE ADMINS AND CENTRAL ADMINS */}
+              {isCollegeAdmin && (
+                <button
+                  id="tab-btn-sponsorships"
+                  onClick={() => setActiveTab('sponsorships')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+                    activeTab === 'sponsorships'
+                      ? 'bg-amber text-background font-bold shadow-amber-glow'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Sponsor Applications</span>
                 </button>
               )}
             </div>
@@ -382,6 +402,38 @@ export const RecycleModuleModal: React.FC = () => {
                         className="px-5 py-2.5 rounded-xl bg-cyan hover:bg-cyan-bright text-black font-bold text-xs shadow-cyan-glow transition-all cursor-pointer"
                       >
                         Return to Operator Terminal
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'sponsorships' && (
+                <motion.div
+                  key="sponsorships"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {isCollegeAdmin ? (
+                    <CollegeAdminSponsorships />
+                  ) : (
+                    <div className="p-8 text-center space-y-4 max-w-md mx-auto my-12 rounded-2xl liquid-glass border border-amber/30">
+                      <div className="w-12 h-12 rounded-2xl bg-amber/20 border border-amber/40 flex items-center justify-center text-amber mx-auto shadow-amber-glow">
+                        <ShieldAlert className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg font-bold text-text-primary">
+                        Access Restricted: Campus Administrator Role Required
+                      </h3>
+                      <p className="text-xs text-text-secondary leading-relaxed">
+                        Corporate sponsorship applications and partnership approvals are restricted strictly to authorized university administrators and platform secretariat officials.
+                      </p>
+                      <button
+                        onClick={() => setActiveTab(isStudent ? 'student_flow' : 'kiosk_terminal')}
+                        className="px-5 py-2.5 rounded-xl bg-cyan hover:bg-cyan-bright text-black font-bold text-xs shadow-cyan-glow transition-all cursor-pointer"
+                      >
+                        Return to Authorized Portal
                       </button>
                     </div>
                   )}

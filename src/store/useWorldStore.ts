@@ -5,9 +5,12 @@ import { REGIONS, type Region } from '../data/regions'
 import type { CampusCluster } from '../utils/clusterMath'
 
 export type ViewMode = 'globe' | 'skyline'
+export type AppRoute = 'world' | 'sponsor'
 
 interface WorldState {
   viewMode: ViewMode
+  currentRoute: AppRoute
+  sponsorTierPrefill: 'local_business' | 'corporate_sustainability' | 'global_impact' | null
   campuses: RankedCampus[]
   sponsors: RankedSponsor[]
   selectedCampusId: string | null
@@ -30,6 +33,10 @@ interface WorldState {
   activeChapter: number // 0 to 4
   isFreeOrbit: boolean
   lenisScrollTo: ((target: string | number) => void) | null
+
+  // Route & Navigation Actions
+  navigateToSponsor: (tierPrefill?: 'local_business' | 'corporate_sustainability' | 'global_impact' | null) => void
+  navigateToWorld: () => void
 
   // Actions
   loadData: () => Promise<void>
@@ -58,8 +65,19 @@ interface WorldState {
   registerLenisScrollTo: (fn: ((target: string | number) => void) | null) => void
 }
 
+const getInitialRoute = (): AppRoute => {
+  if (typeof window !== 'undefined') {
+    if (window.location.hash.includes('sponsor') || window.location.pathname.includes('/sponsor')) {
+      return 'sponsor'
+    }
+  }
+  return 'world'
+}
+
 export const useWorldStore = create<WorldState>((set, get) => ({
   viewMode: 'globe',
+  currentRoute: getInitialRoute(),
+  sponsorTierPrefill: null,
   campuses: [],
   sponsors: [],
   selectedCampusId: null,
@@ -82,6 +100,35 @@ export const useWorldStore = create<WorldState>((set, get) => ({
   activeChapter: 0,
   isFreeOrbit: false,
   lenisScrollTo: null,
+
+  navigateToSponsor: (tierPrefill = 'corporate_sustainability') => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.history.pushState({ route: 'sponsor' }, '', '#/sponsor')
+      } catch {
+        window.location.hash = '/sponsor'
+      }
+    }
+    set({
+      currentRoute: 'sponsor',
+      sponsorTierPrefill: tierPrefill || 'corporate_sustainability',
+      activeModal: null
+    })
+  },
+
+  navigateToWorld: () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cleanPath = window.location.pathname.replace(/\/sponsor\/?$/, '') || '/'
+        window.history.pushState({ route: 'world' }, '', cleanPath)
+      } catch {
+        window.location.hash = ''
+      }
+    }
+    set({
+      currentRoute: 'world'
+    })
+  },
 
   loadData: async () => {
     const campuses = await mockApi.getLeaderboard()

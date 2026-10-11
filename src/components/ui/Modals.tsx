@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Sparkles, Building2, CheckCircle2 } from 'lucide-react'
+import { X, Sparkles, Building2, CheckCircle2, ArrowRight } from 'lucide-react'
 import { useWorldStore } from '../../store/useWorldStore'
 import { useRecycleStore } from '../../store/useRecycleStore'
 import { useAuthStore } from '../../store/useAuthStore'
@@ -8,7 +8,7 @@ import { RecycleModuleModal } from '../recycle/RecycleModuleModal'
 import { LoginModal } from '../auth/LoginModal'
 
 export const Modals: React.FC = () => {
-  const { activeModal, openModal } = useWorldStore()
+  const { activeModal, openModal, navigateToSponsor } = useWorldStore()
   const { setActiveTab } = useRecycleStore()
   const { isAuthenticated, currentUser, isLoginModalOpen, openLoginModal } = useAuthStore()
 
@@ -16,10 +16,18 @@ export const Modals: React.FC = () => {
     if (!activeModal) return
 
     const isStudent = currentUser?.role === 'student'
-    const isCollegeAdmin = currentUser?.role === 'college_admin'
+    const isCollegeAdmin = currentUser?.role === 'college_admin' || currentUser?.role === 'central_admin'
     const isKioskOperator = currentUser?.role === 'kiosk_operator'
 
-    if (activeModal === 'vault') {
+    if (activeModal === 'sponsorships') {
+      if (!isAuthenticated) {
+        openLoginModal('Please authenticate with an authorized college administrator account to access Sponsor Applications.')
+      } else if (!isCollegeAdmin) {
+        setActiveTab('student_flow')
+      } else {
+        setActiveTab('sponsorships')
+      }
+    } else if (activeModal === 'vault') {
       if (!isAuthenticated) {
         openLoginModal('Please authenticate with your student or campus admin account to access the Tech Vault.')
       } else if (isKioskOperator) {
@@ -33,7 +41,7 @@ export const Modals: React.FC = () => {
         openLoginModal('Please authenticate to access the Student Drop-Off portal.')
       } else if (isCollegeAdmin) {
         // Admins do not participate in student drop-off
-        setActiveTab('tech_vault')
+        setActiveTab('sponsorships')
       } else if (isKioskOperator) {
         setActiveTab('kiosk_terminal')
       } else {
@@ -58,8 +66,11 @@ export const Modals: React.FC = () => {
 
   if (!activeModal) return null
 
-  // If user opens Recycle, Vault, or Terminal and is authenticated, render RecycleModuleModal
-  if (isAuthenticated && (activeModal === 'recycle' || activeModal === 'vault' || activeModal === 'terminal')) {
+  // If user opens Recycle, Vault, Terminal, or Sponsorships and is authenticated, render RecycleModuleModal
+  if (
+    isAuthenticated &&
+    (activeModal === 'recycle' || activeModal === 'vault' || activeModal === 'terminal' || activeModal === 'sponsorships')
+  ) {
     return (
       <AnimatePresence>
         <RecycleModuleModal />
@@ -67,8 +78,11 @@ export const Modals: React.FC = () => {
     )
   }
 
-  // If unauthenticated and tried to open recycle/vault/terminal, show login
-  if (!isAuthenticated && (activeModal === 'recycle' || activeModal === 'vault' || activeModal === 'terminal')) {
+  // If unauthenticated and tried to open recycle/vault/terminal/sponsorships, show login
+  if (
+    !isAuthenticated &&
+    (activeModal === 'recycle' || activeModal === 'vault' || activeModal === 'terminal' || activeModal === 'sponsorships')
+  ) {
     return <LoginModal />
   }
 
@@ -127,12 +141,26 @@ export const Modals: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
                 <button
-                  onClick={() => openModal(null)}
-                  className="w-full py-3.5 px-4 rounded-full bg-amber hover:brightness-105 active:scale-[0.98] font-bold text-xs text-background transition-all shadow-amber-glow"
+                  onClick={() => {
+                    openModal(null)
+                    navigateToSponsor('corporate_sustainability')
+                  }}
+                  className="w-full py-3.5 px-4 rounded-full bg-amber hover:brightness-105 active:scale-[0.98] font-bold text-xs text-background transition-all shadow-amber-glow flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  Contact University Partnership Desk
+                  <span>Explore Full Sponsorship Program & Founding Pilot</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    openModal(null)
+                    navigateToSponsor('global_impact')
+                  }}
+                  className="w-full py-2.5 px-4 rounded-full bg-white/5 hover:bg-white/10 active:scale-[0.98] text-xs font-mono text-text-secondary hover:text-text-primary transition-all border border-white/10 cursor-pointer"
+                >
+                  Contact University Partnership Desk →
                 </button>
               </div>
             </div>

@@ -25,7 +25,8 @@ export const TopNav: React.FC = () => {
     scrollToChapter,
     activeChapter,
     toggleLeftDrawer,
-    isLeftDrawerOpen
+    isLeftDrawerOpen,
+    navigateToSponsor
   } = useWorldStore()
 
   const {
@@ -36,7 +37,7 @@ export const TopNav: React.FC = () => {
   } = useAuthStore()
 
   const isStudent = currentUser?.role === 'student'
-  const isCollegeAdmin = currentUser?.role === 'college_admin'
+  const isCollegeAdmin = currentUser?.role === 'college_admin' || currentUser?.role === 'central_admin'
   const isKioskOperator = currentUser?.role === 'kiosk_operator'
 
   const navChapters = [
@@ -128,6 +129,14 @@ export const TopNav: React.FC = () => {
             </>
           ) : isCollegeAdmin ? (
             <>
+              <button
+                id="nav-btn-sponsorships"
+                onClick={() => openModal('sponsorships')}
+                className="px-3 py-1 rounded-full text-xs font-medium text-amber hover:text-amber-bright hover:bg-amber/10 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <Building2 className="w-3 h-3 text-amber" />
+                <span>Sponsorships</span>
+              </button>
               <button
                 onClick={() => openModal('vault')}
                 className="px-3 py-1 rounded-full text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all cursor-pointer"
@@ -226,6 +235,16 @@ export const TopNav: React.FC = () => {
               <span className="hidden sm:inline">Rankings</span>
             </button>
           )}
+
+          {/* Become a Sponsor Direct Pill */}
+          <button
+            onClick={() => navigateToSponsor('corporate_sustainability')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold liquid-glass-pill specular-rim text-amber hover:text-amber-light border border-amber/30 hover:border-amber/50 bg-amber/10 transition-all cursor-pointer shadow-amber-glow"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber animate-pulse" />
+            <span className="hidden sm:inline">Become a Sponsor</span>
+            <span className="sm:hidden">Sponsor</span>
+          </button>
 
           {/* Mode Switcher with Sliding Active Pill */}
           <div className="flex items-center p-1 rounded-full liquid-glass-pill specular-rim relative">

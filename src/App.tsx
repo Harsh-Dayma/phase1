@@ -9,12 +9,18 @@ import { Modals } from './components/ui/Modals'
 import { ClusterSelectionPopover } from './components/ui/ClusterSelectionPopover'
 import { ScrollStorySections } from './components/ui/ScrollStorySections'
 import { ScrollProgressHUD } from './components/ui/ScrollProgressHUD'
+import { SponsorshipPage } from './components/sponsor/SponsorshipPage'
 import { useWorldStore } from './store/useWorldStore'
 import { useAuthStore } from './store/useAuthStore'
 import { useLenis } from './hooks/useLenis'
 
 export const App: React.FC = () => {
-  const { loadData } = useWorldStore()
+  const {
+    currentRoute,
+    navigateToWorld,
+    sponsorTierPrefill,
+    loadData
+  } = useWorldStore()
   const { checkSession } = useAuthStore()
 
   // Initialize Lenis smooth scroll engine
@@ -23,8 +29,41 @@ export const App: React.FC = () => {
   useEffect(() => {
     loadData()
     checkSession()
+
+    // Global Browser History / Hash / Route Synchronization
+    const handleRouteChange = () => {
+      if (typeof window !== 'undefined') {
+        const isSponsor =
+          window.location.hash.includes('sponsor') ||
+          window.location.pathname.includes('/sponsor')
+        if (isSponsor) {
+          useWorldStore.setState({ currentRoute: 'sponsor' })
+        } else {
+          useWorldStore.setState({ currentRoute: 'world' })
+        }
+      }
+    }
+
+    window.addEventListener('popstate', handleRouteChange)
+    window.addEventListener('hashchange', handleRouteChange)
+
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange)
+      window.removeEventListener('hashchange', handleRouteChange)
+    }
   }, [loadData, checkSession])
 
+  // Dedicated Sponsorship Portal View
+  if (currentRoute === 'sponsor') {
+    return (
+      <SponsorshipPage
+        onReturnToOrbit={navigateToWorld}
+        initialPrefillPathway={sponsorTierPrefill}
+      />
+    )
+  }
+
+  // 3D Planetary World View
   return (
     <div className="relative min-h-screen bg-background select-none overflow-x-hidden">
       {/* 0. Sub-Silicon Schematic Void & Reclaimed Material Core (Pinned) */}

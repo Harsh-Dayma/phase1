@@ -85,7 +85,7 @@ export type MascotMood =
   | 'celebrating'
   | 'operator_scan'
 
-export type RecycleModuleTab = 'student_flow' | 'kiosk_terminal' | 'tech_vault'
+export type RecycleModuleTab = 'student_flow' | 'kiosk_terminal' | 'tech_vault' | 'sponsorships'
 
 interface RecycleStoreState {
   // Navigation & View Mode

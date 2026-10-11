@@ -16,6 +16,7 @@ export const ScrollStorySections: React.FC = () => {
     selectCampus,
     toggleLeftDrawer,
     openModal,
+    navigateToSponsor,
     campuses
   } = useWorldStore()
 
@@ -439,8 +440,8 @@ export const ScrollStorySections: React.FC = () => {
             </button>
 
             <button
-              onClick={() => openModal('sponsor_pitch')}
-              className="px-6 py-3 rounded-full liquid-glass-pill liquid-glass-control border-white/10 text-text-primary hover:border-cyan/40 hover:text-cyan text-xs font-semibold tracking-wide transition-all"
+              onClick={() => navigateToSponsor('corporate_sustainability')}
+              className="px-6 py-3 rounded-full liquid-glass-pill liquid-glass-control border-white/10 text-text-primary hover:border-amber/40 hover:text-amber text-xs font-semibold tracking-wide transition-all cursor-pointer"
             >
               Become a Sponsor
             </button>

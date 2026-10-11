@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'college_admin' | 'kiosk_operator'
+export type UserRole = 'student' | 'college_admin' | 'kiosk_operator' | 'central_admin'
 
 export interface UserProfile {
   id: string
@@ -106,5 +106,20 @@ export const PRESET_USERS: Record<string, { user: UserProfile; passwordHash: str
       department: 'Circular Hub Operations'
     },
     passwordHash: 'operator123'
+  },
+
+  // 4. CENTRAL PLATFORM ADMINISTRATOR (Cross-campus governance & unassigned applications)
+  'central.admin@re-earth.eco': {
+    user: {
+      id: 'usr_central_platform_admin',
+      name: 'Dr. Alistair Vance',
+      email: 'central.admin@re-earth.eco',
+      role: 'central_admin',
+      campusId: 'central_hq',
+      campusName: 'RE—EARTH Global Environmental Secretariat',
+      adminDesignation: 'Chief Sustainability Officer & Consortium Director',
+      department: 'Platform Oversight & Cross-Campus Governance'
+    },
+    passwordHash: 'admin123'
   }
 }
